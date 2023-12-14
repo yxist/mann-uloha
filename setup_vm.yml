@@ -1,0 +1,9 @@
+---
+
+- name: Setup a local VM which will hold all our containers
+  hosts: localhost
+  vars:
+    vm_name: "mann-uloha"
+    vm_mac: "52:54:00:cc:a0:4e"
+  roles:
+    - setup_vm

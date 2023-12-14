@@ -1,0 +1,68 @@
+---
+- name: Create a subdirectory for our disk images and files
+  ansible.builtin.file:
+    dest: "{{ playbook_dir }}/vm/"
+    state: "directory"
+    mode: "0755"
+
+- name: Download debian cloud-init qcow2 image
+  ansible.builtin.get_url:
+    url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
+    dest: "{{ playbook_dir }}/vm/clean.qcow2"
+    mode: "0660"
+    force: false
+
+- name: Create a copy of the image
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ playbook_dir }}/vm/clean.qcow2"
+    dest: "{{ playbook_dir }}/vm/disk.qcow2"
+    mode: "0666"
+    force: false
+
+- name: Resize the image
+  ansible.builtin.command:
+    cmd: "qemu-img resize {{ playbook_dir }}/vm/disk.qcow2 20G"
+  changed_when: true # so that ansible-lint doesn't complain
+
+- name: Check if ssh key exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/vm/id_ed25519"
+  register: ssh_key_file
+
+- name: Generate a new ssh key to access the VM
+  ansible.builtin.command:
+    cmd: "ssh-keygen -f {{ playbook_dir }}/vm/id_ed25519 -N '' -t ed25519"
+  register: ssh_keygen_output
+  when: not ssh_key_file.stat.exists
+  changed_when: true # so that ansible-lint doesn't complain
+
+- name: Generate cloud-init configuration meta-data
+  ansible.builtin.template:
+    src: "meta-data.j2"
+    dest: "{{ playbook_dir }}/vm/meta-data"
+    mode: "0640"
+    force: true
+
+- name: Generate cloud-config
+  ansible.builtin.template:
+    src: "user-data.j2"
+    dest: "{{ playbook_dir }}/vm/user-data"
+    mode: "0640"
+    force: true
+
+- name: Generate cloud-init configuration iso
+  ansible.builtin.command:
+    chdir: "{{ playbook_dir }}/vm"
+    cmd: "genisoimage -output cidata.iso -V cidata -r -J meta-data user-data"
+  changed_when: true # so that ansible-lint doesn't complain
+
+- name: Create a new libvirt VM that hosts all our docker containers
+  community.libvirt.virt:
+    xml: "{{ lookup('template', 'vm.xml.j2') }}"
+    command: define
+
+- name: Start the VM
+  community.libvirt.virt:
+    name: "{{ vm_name }}"
+    state: "running"

@@ -1,0 +1,27 @@
+---
+
+- name: Destroy VM
+  hosts: localhost
+  vars:
+    vm_name: "mann-uloha"
+  tasks:
+    - name: Deleting misc files
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/vm/{{ item }}"
+        state: absent
+      with_items:
+        - cidata.iso
+        - user-data
+        - meta-data
+    # we keep clean.qcow2 (so that we don't have to download it again)
+    # we also keep ssh keys so that we don't have to clean known_hosts
+
+    - name: Destroying VM
+      community.libvirt.virt:
+        name: "{{ vm_name }}"
+        state: destroyed
+
+    - name: Deleting disk
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/vm/disk.qcow2"
+        state: absent

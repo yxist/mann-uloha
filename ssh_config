@@ -1,0 +1,4 @@
+UserKnownHostsFile vm/known_hosts
+Host *
+	IdentityFile vm/id_ed25519
+	

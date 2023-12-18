@@ -1,0 +1,28 @@
+---
+
+- name: Setup lxc
+  hosts: hostvm
+  roles:
+    - lxc
+
+- name: Install prometheus node exporter on every container
+  hosts: containers
+  tasks:
+    - name: Install prometheus-node-exporter
+      ansible.builtin.apt:
+        pkg: prometheus-node-exporter
+
+- name: Setup monitoring
+  hosts: monitoring
+  roles:
+    - monitoring
+
+- name: Setup nginx
+  hosts: nginx
+  roles:
+    - nginx
+
+- name: Setup etcd
+  hosts: etcd
+  roles:
+    - etcd

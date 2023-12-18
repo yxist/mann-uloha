@@ -1,0 +1,45 @@
+- name: Install nginx
+  ansible.builtin.apt:
+    state: present
+    pkg:
+      - nginx
+
+- name: Remove default nginx site
+  ansible.builtin.file:
+    dest: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Enable nginx metrics
+  ansible.builtin.template:
+    src: nginx_stub.conf.j2
+    dest: /etc/nginx/conf.d/nginx_stub.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for nginx metrics to come up # prometheus exporter fails otherwise
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8080/stub_status"
+    return_content: true
+  register: nginx_check
+  until: nginx_check.status == 200
+  retries: 30
+  delay: 1
+
+- name: Install prometeus-nginx-exporter # debian autostarts installed services so we install it here to not prevent errors
+  ansible.builtin.apt:
+    state: present
+    pkg:
+      - prometheus-nginx-exporter
+
+- name: Enable prometheus exporter
+  ansible.builtin.service:
+    name: prometheus-nginx-exporter
+    state: started
+    enabled: true
+
+- name: Host specific configuration
+  ansible.builtin.include_tasks:
+    file: "{{ inventory_hostname }}.yml"

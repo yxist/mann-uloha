@@ -1,0 +1,57 @@
+- name: Install prometheus
+  ansible.builtin.apt:
+    state: present
+    pkg: prometheus
+
+- name: Configure prometheus
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    mode: "0644"
+  notify: Restart prometheus
+
+- name: Create a directories for our script
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    state: directory
+    mode: "0755"
+  with_items:
+    - /services
+    - /services/monitor_script
+    - /services/monitor_script/log
+    - /services/monitor_script/log/main
+
+- name: Add logging script
+  ansible.builtin.template:
+    src: logging.sh.j2
+    dest: /services/monitor_script/log/run
+    mode: "0755"
+
+- name: Add monitoring script
+  ansible.builtin.template:
+    src: script.sh.j2
+    dest: /services/monitor_script/run
+    mode: "0755"
+
+- name: Install daemontools and curl
+  ansible.builtin.apt:
+    state: present
+    pkg:
+      - daemontools
+      - curl
+
+- name: Add svscan service # this will launch our daemontools script
+  ansible.builtin.template:
+    src: svscan.service.j2
+    dest: /etc/systemd/system/svscan.service
+    mode: "0644"
+  notify: Systemd daemon-reload
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start svscan
+  ansible.builtin.service:
+    name: svscan
+    state: started
+    enabled: true

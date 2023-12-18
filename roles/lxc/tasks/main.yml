@@ -1,0 +1,81 @@
+- name: Update packages
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+
+- name: Install lxc
+  ansible.builtin.apt:
+    pkg:
+      - lxc
+      - python3-lxc
+
+- name: Generate static DHCP assignments for containers
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: /etc/lxc/dnsmasq.conf
+    owner: root
+    mode: "0644"
+  notify:
+    - Restart lxc-net
+
+- name: Configure DHCP server to use our static assignments
+  ansible.builtin.lineinfile:
+    path: /etc/default/lxc-net
+    regexp: "^LXC_DHCP_CONFILE="
+    line: "{{ item }}"
+  with_items:
+    - 'LXC_DHCP_CONFILE=/etc/lxc/dnsmasq.conf'
+  notify:
+    - Restart lxc-net
+
+- name: Flush handlers to restart lxc-net
+  ansible.builtin.meta: flush_handlers
+
+- name: Create containers
+  community.general.lxc_container:
+    name: "{{ item }}"
+    template: debian
+    template_options: --release bookworm
+    state: started
+    container_command: |
+      # ansible dependencies
+      apt update
+      apt install -y python3
+
+      # add to authorized_keys
+      mkdir /root/.ssh
+      chmod 600 /root/.ssh
+      echo '{{ lookup("file", "{{ playbook_dir }}/vm/id_ed25519.pub") }}' > /root/.ssh/authorized_keys
+    container_config:
+      - "lxc.start.auto=1"
+      - "lxc.group=onboot"
+  with_items: "{{ groups['containers'] }}"
+
+- name: Read host ssh keys
+  ansible.builtin.command:
+    cmd: "ssh-keyscan -t ed25519 {{ hostvars[item]['ansible_host'] }}"
+  with_items: "{{ groups['containers'] }}"
+  changed_when: false
+  register: container_ssh_keys
+
+- name: Add ssh keys to known_hosts
+  ansible.builtin.lineinfile:
+    line: "{{ item.stdout }}"
+    dest: "{{ playbook_dir }}/vm/known_hosts"
+    state: present
+  with_items: "{{ container_ssh_keys.results }}"
+  delegate_to: localhost
+
+- name: Forward container ports to outside the VM
+  ansible.builtin.iptables:
+    table: nat
+    chain: PREROUTING
+    protocol: tcp
+    jump: DNAT
+    destination_port: "{{ item.0 }}"
+    to_destination: "{{ item.1 }}"
+    state: present
+  loop:
+    - ['9090', '{{ hostvars["monitoring"]["ansible_host"] }}:9090']
+    - ['1080', '{{ hostvars["nginx-upstream"]["ansible_host"] }}:80']
+    - ['2080', '{{ hostvars["nginx-cache"]["ansible_host"] }}:80']

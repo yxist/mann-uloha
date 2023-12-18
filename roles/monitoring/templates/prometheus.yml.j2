@@ -1,0 +1,26 @@
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+  
+  - job_name: nginx
+    static_configs:
+      - targets:
+{% for host in groups['nginx'] %}
+          - '{{ hostvars[host]['ansible_host'] }}:9113'
+{% endfor %}
+  
+  - job_name: etcd
+    static_configs:
+      - targets:
+{% for host in groups['etcd'] %}
+          - '{{ hostvars[host]['ansible_host'] }}:2379'
+{% endfor %}
+
+  - job_name: node
+    static_configs:
+      - targets:
+{% for host in groups['containers'] %}
+          - '{{ hostvars[host]['ansible_host'] }}:9100'
+{% endfor %}

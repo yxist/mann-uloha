@@ -66,3 +66,15 @@
   community.libvirt.virt:
     name: "{{ vm_name }}"
     state: "running"
+
+- name: Wait for SSH to come up
+  ansible.builtin.wait_for:
+    port: 22
+    host: "{{ hostvars['mann-uloha']['ansible_host'] }}"
+    search_regex: OpenSSH
+    delay: 3
+
+- name: Add server keys to known_hosts
+  ansible.builtin.shell:
+    cmd: "ssh-keyscan -t ed25519 {{ hostvars['mann-uloha']['ansible_host'] }} >> {{ playbook_dir }}/vm/known_hosts"
+  changed_when: true # so that ansible-lint doesn't complain

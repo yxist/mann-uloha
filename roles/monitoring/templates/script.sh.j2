@@ -1,0 +1,18 @@
+#!/bin/bash
+
+while true
+do
+    echo '######################'
+    echo "# date $(date +%F_%T)"
+    echo "# load1 start"
+{% for host in groups['containers'] %}
+    echo "{{ host }} $(curl -s http://{{ hostvars[host]['ansible_host'] }}:9100/metrics | grep '^node_load1 ' | cut -d' ' -f2)"
+{% endfor %}
+    echo "# load1 end"
+{% for host in groups['nginx'] %}
+    echo "# {{ host }} start"
+    curl -vs http://{{ hostvars[host]['ansible_host'] }}:8080/stub_status 2>&1
+    echo "# {{ host }} end"
+{% endfor %}
+    sleep 15
+done

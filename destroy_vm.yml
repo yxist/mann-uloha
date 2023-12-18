@@ -13,8 +13,10 @@
         - cidata.iso
         - user-data
         - meta-data
+        - known_hosts
+        - id_ed25519
+        - id_ed25519.pub
     # we keep clean.qcow2 (so that we don't have to download it again)
-    # we also keep ssh keys so that we don't have to clean known_hosts
 
     - name: Destroying VM
       community.libvirt.virt:

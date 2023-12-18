@@ -1,0 +1,3 @@
+{% for host in groups['containers'] %}
+dhcp-host={{ host }},{{ hostvars[host]['ansible_host'] }}
+{% endfor %}

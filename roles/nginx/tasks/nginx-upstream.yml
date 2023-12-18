@@ -1,0 +1,15 @@
+- name: Create www dir
+  ansible.builtin.file:
+    dest: /var/www/example
+    state: directory
+    mode: "0755"
+
+# TODO add some files
+
+- name: Configure nginx for hosting local files
+  ansible.builtin.template:
+    src: nginx-upstream.conf.j2
+    dest: /etc/nginx/conf.d/nginx-upstream.conf
+    mode: "0644"
+    force: true
+  notify: Reload nginx

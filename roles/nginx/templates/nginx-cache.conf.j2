@@ -1,0 +1,21 @@
+proxy_cache_path /var/www/cache levels=1 inactive=24h max_size=1g keys_zone=STATIC:10m;
+
+upstream nginx-upstream {
+    server {{ hostvars['nginx-upstream']['ansible_host'] }}:80;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://nginx-upstream/;
+        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering on;
+        proxy_cache STATIC;
+        proxy_cache_valid 200 24h;
+        proxy_cache_use_stale  error timeout invalid_header updating http_500 http_502 http_503 http_504;
+    }
+}

@@ -1,0 +1,11 @@
+# we need to configure it first because it gets started with the install
+- name: Configure etcd
+  ansible.builtin.template:
+    src: etcd.j2
+    dest: /etc/default/etcd
+    mode: "0644"
+
+- name: Install etcd
+  ansible.builtin.apt:
+    pkg:
+      - etcd-server

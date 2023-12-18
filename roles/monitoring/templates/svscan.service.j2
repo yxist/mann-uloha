@@ -1,0 +1,8 @@
+[Unit]
+Description=Svscan
+
+[Service]
+ExecStart=/usr/bin/svscan /services
+
+[Install]
+WantedBy=multi-user.target

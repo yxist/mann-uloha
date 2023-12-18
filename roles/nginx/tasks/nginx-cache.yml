@@ -1,0 +1,14 @@
+- name: Create cache dir
+  ansible.builtin.file:
+    dest: /var/www/cache/
+    state: directory
+    mode: "0755"
+    owner: "www-data"
+
+- name: Configure nginx caching proxy
+  ansible.builtin.template:
+    src: nginx-cache.conf.j2
+    dest: /etc/nginx/conf.d/nginx-cache.conf
+    mode: "0644"
+    force: true
+  notify: Reload nginx

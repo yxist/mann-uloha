@@ -57,6 +57,12 @@
     cmd: "genisoimage -output cidata.iso -V cidata -r -J meta-data user-data"
   changed_when: true # so that ansible-lint doesn't complain
 
+- name: Make sure virbr0 is enabled and running
+  community.libvirt.virt_net:
+    name: default
+    autostart: true
+    state: active
+
 - name: Create a new libvirt VM that hosts all our docker containers
   community.libvirt.virt:
     xml: "{{ lookup('template', 'vm.xml.j2') }}"

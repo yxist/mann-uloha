@@ -2,42 +2,29 @@ hostvm:
   hosts:
     mann-uloha:
       ansible_ssh_common_args: "-F ./ssh_config"
-      ansible_host: 192.168.122.156 # derived from MAC adress, so shouldn't change
+      ansible_host: 192.168.122.21 # IP specified here will be reserved in virbr0 DHCP server
       ansible_user: root
 containers:
+  vars:
+    # using the VM as a jumphost to connect to the containers
+    ansible_ssh_common_args: "-J root@{{ hostvars['mann-uloha']['ansible_host'] }} -F ./ssh_config"
+    ansible_user: root
   hosts:
-    # using the VM as a jumphost to connect to the containersa
     monitoring:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.2
     nginx-upstream:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.3
     nginx-cache:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.4
     etcd1:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.11
     etcd2:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.12
     etcd3:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.13
     etcd4:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.14
     etcd5:
-      ansible_ssh_common_args: "-J root@192.168.122.156 -F ./ssh_config"
-      ansible_user: root
       ansible_host: 10.0.3.15
 
 nginx:

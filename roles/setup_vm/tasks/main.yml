@@ -63,6 +63,12 @@
     autostart: true
     state: active
 
+- name: Reserve IP in virbr0 DHCP
+  community.libvirt.virt_net:
+    name: default
+    command: modify
+    xml: "<host mac='{{ vm_mac }}' name='{{ vm_name }}' ip='{{ hostvars['mann-uloha']['ansible_host'] }}'/>"
+
 - name: Create a new libvirt VM that hosts all our docker containers
   community.libvirt.virt:
     xml: "{{ lookup('template', 'vm.xml.j2') }}"

@@ -4,6 +4,7 @@
   hosts: localhost
   vars:
     vm_name: "mann-uloha"
+    vm_mac: "52:54:00:cc:a0:4e"
   tasks:
     - name: Deleting misc files
       ansible.builtin.file:
@@ -22,11 +23,22 @@
       community.libvirt.virt:
         name: "{{ vm_name }}"
         state: destroyed
+      failed_when: false # fails when VM already doesn't exist
 
     - name: Undefine VM
       community.libvirt.virt:
         name: "{{ vm_name }}"
         command: undefine
+      failed_when: false # fails when VM already doesn't exist
+
+# This should work but doesn't
+#
+#   - name: Remove IP reservation from DHCP config
+#     ansible.builtin.command:
+#       cmd: "virsh net-update default delete ip-dhcp-host '{{ dhcp_xml }}' --live --config"
+#     vars:
+#       dhcp_xml: '<host mac="{{ vm_mac }}" host="{{ vm_name }}" ip="{{ hostvars["mann-uloha"]["ansible_host"] }}"/>'
+#     changed_when: true # keep ansible-lint from complaining
 
     - name: Deleting disk
       ansible.builtin.file:

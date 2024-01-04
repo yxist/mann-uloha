@@ -23,6 +23,11 @@
         name: "{{ vm_name }}"
         state: destroyed
 
+    - name: Undefine VM
+      community.libvirt.virt:
+        name: "{{ vm_name }}"
+        command: undefine
+
     - name: Deleting disk
       ansible.builtin.file:
         path: "{{ playbook_dir }}/vm/disk.qcow2"

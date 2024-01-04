@@ -7,7 +7,7 @@
 
 - name: Download debian cloud-init qcow2 image
   ansible.builtin.get_url:
-    url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
+    url: "https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-generic-amd64.qcow2"
     dest: "{{ playbook_dir }}/vm/clean.qcow2"
     mode: "0660"
     force: false

@@ -8,14 +8,14 @@
 - name: Download debian cloud-init qcow2 image
   ansible.builtin.get_url:
     url: "https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-generic-amd64.qcow2"
-    dest: "{{ playbook_dir }}/vm/clean.qcow2"
+    dest: "{{ playbook_dir }}/vm/clean_11.qcow2"
     mode: "0660"
     force: false
 
 - name: Create a copy of the image
   ansible.builtin.copy:
     remote_src: true
-    src: "{{ playbook_dir }}/vm/clean.qcow2"
+    src: "{{ playbook_dir }}/vm/clean_11.qcow2"
     dest: "{{ playbook_dir }}/vm/disk.qcow2"
     mode: "0666"
     force: false

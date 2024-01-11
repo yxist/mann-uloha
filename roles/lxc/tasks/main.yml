@@ -3,11 +3,12 @@
     upgrade: dist
     update_cache: true
 
-- name: Install lxc
+- name: Install packages
   ansible.builtin.apt:
     pkg:
       - lxc
       - python3-lxc
+      - iptables # required for forwarding ports (not installed on minimal debian install)
 
 - name: Generate static DHCP assignments for containers
   ansible.builtin.template:

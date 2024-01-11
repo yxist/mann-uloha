@@ -1,0 +1,23 @@
+---
+- name: Create a subdirectory for our files
+  ansible.builtin.file:
+    dest: "{{ playbook_dir }}/vm/"
+    state: "directory"
+    mode: "0755"
+
+- name: Ensure known_hosts exists
+  ansible.builtin.command:
+    cmd: "touch {{ playbook_dir}}/known_hosts"
+  changed_when: true # so that ansible-lint doesn't complain
+
+- name: Check if ssh key exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/vm/id_ed25519"
+  register: ssh_key_file
+
+- name: Generate a new ssh key to access the containers
+  ansible.builtin.command:
+    cmd: "ssh-keygen -f {{ playbook_dir }}/vm/id_ed25519 -N '' -t ed25519"
+  register: ssh_keygen_output
+  when: not ssh_key_file.stat.exists
+  changed_when: true # so that ansible-lint doesn't complain

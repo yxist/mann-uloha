@@ -7,7 +7,7 @@
 
 - name: Ensure known_hosts exists
   ansible.builtin.command:
-    cmd: "touch {{ playbook_dir}}/known_hosts"
+    cmd: "touch {{ playbook_dir}}/vm/known_hosts"
   changed_when: true # so that ansible-lint doesn't complain
 
 - name: Check if ssh key exists
